@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   frontend:
     build:
@@ -8,25 +10,42 @@ services:
     volumes:
       - ./apps/web:/app
       - /app/node_modules
+      - /app/.next
     environment:
       - NODE_ENV=development
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+      - NEXT_PUBLIC_API_URL=http://backend:8000
+    networks:
+      - app_network
+    depends_on:
+      - backend
 
   backend:
     build:
       context: .
-      dockerfile: docker/backend/Dockerfile.dev  # Switch to Dockerfile.prod for production
+      dockerfile: docker/backend/Dockerfile.dev
     volumes:
       - ./server:/var/www/html
+      - /var/www/html/vendor
     ports:
-      - "8000:8000"  # Using PHP's built-in server for dev
+      - "8000:8000"
     environment:
       - APP_ENV=local
       - APP_DEBUG=true
+      - DB_CONNECTION=pgsql
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_DATABASE=learning_platform
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=secret
+      - REDIS_HOST=redis
+      - REDIS_PASSWORD=null
+      - REDIS_PORT=6379
+      - QUEUE_CONNECTION=redis
+      - FRONTEND_URL=http://frontend:3000
+      - SANCTUM_STATEFUL_DOMAINS=localhost:3000
+      - SESSION_DOMAIN=localhost
+    networks:
+      - app_network
     depends_on:
       db:
         condition: service_healthy
@@ -41,6 +60,8 @@ services:
       - POSTGRES_PASSWORD=secret
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app_network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -53,28 +74,16 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    networks:
+      - app_network
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 3
 
-  wordpress:
-    image: wordpress:latest
-    ports:
-      - "8080:80"
-      - "8081:8000"  # Changed from 8000:8000 to 8081:8000
-    environment:
-      - WORDPRESS_DB_HOST=db
-      - WORDPRESS_DB_USER=postgres
-      - WORDPRESS_DB_PASSWORD=secret
-      - WORDPRESS_DB_NAME=learning_platform
-    volumes:
-      - ./wp:/var/www/html
-    depends_on:
-      db:
-        condition: service_healthy
-    restart: unless-stopped
+networks:
+  app_network:
 
 volumes:
   postgres_data:

@@ -16,6 +16,7 @@ interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<any>;
   logout: () => Promise<void>;
+  register: (name: string, email: string, password: string, password_confirmation: string) => Promise<any>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -74,15 +75,52 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const register = async (name: string, email: string, password: string, password_confirmation: string) => {
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name, email, password, password_confirmation }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || data.message || 'Registration failed');
+      }
+
+      // Instead of auto-login, redirect to login page
+      window.location.href = '/auth/login?registered=true';
+      return data;
+    } catch (error) {
+      console.error('Registration error:', error);
+      throw error;
+    }
+  };
+
   const logout = async () => {
     try {
+      // Call the logout API endpoint
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      // Clear all stored data
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       
-      // Clear the auth cookie as well
+      // Clear the auth cookie (as a fallback, though the API should handle this)
       document.cookie = 'auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
       
+      // Clear the user state
       setUser(null);
+
+      // Navigate to login page
       window.location.href = '/auth/login';
     } catch (error) {
       console.error('Logout error:', error);
@@ -94,7 +132,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, register }}>
       {children}
     </AuthContext.Provider>
   );
@@ -107,5 +145,8 @@ export const useAuth = () => {
   }
   return context;
 };
+
+
+
 
 

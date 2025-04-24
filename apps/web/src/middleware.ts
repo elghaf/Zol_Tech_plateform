@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const isAuth = request.cookies.has('auth-token'); // Adjust based on your auth token name
+  const isAuth = request.cookies.has('auth-token');
 
   // Protected routes
   if (pathname.startsWith('/dashboard') && !isAuth) {

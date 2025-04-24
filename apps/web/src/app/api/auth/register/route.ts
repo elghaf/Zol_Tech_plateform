@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
-// Make sure this matches your actual backend URL
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+// Use 'backend' instead of 'localhost' as that's the service name in docker-compose
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://backend:8000';
 
 export async function POST(request: Request) {
   try {

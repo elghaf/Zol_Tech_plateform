@@ -8,21 +8,27 @@ export default function RegisterPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [passwordConfirmation, setPasswordConfirmation] = useState('');
   const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const { register } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setIsLoading(true);
-
+    
+    if (password !== passwordConfirmation) {
+      setError('Passwords do not match');
+      return;
+    }
+    
     try {
-      await register(name, email, password);
+      await register(name, email, password, passwordConfirmation);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Registration failed');
-    } finally {
-      setIsLoading(false);
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('Registration failed');
+      }
     }
   };
 
@@ -63,10 +69,20 @@ export default function RegisterPage() {
               <input
                 type="password"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+            <div>
+              <input
+                type="password"
+                required
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                placeholder="Confirm Password"
+                value={passwordConfirmation}
+                onChange={(e) => setPasswordConfirmation(e.target.value)}
               />
             </div>
           </div>
@@ -74,14 +90,9 @@ export default function RegisterPage() {
           <div>
             <button
               type="submit"
-              disabled={isLoading}
-              className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white ${
-                isLoading 
-                  ? 'bg-indigo-400 cursor-not-allowed' 
-                  : 'bg-indigo-600 hover:bg-indigo-700'
-              } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500`}
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             >
-              {isLoading ? 'Signing up...' : 'Sign up'}
+              Sign up
             </button>
           </div>
         </form>

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+// Use 'backend' instead of 'localhost' as that's the service name in docker-compose
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://backend:8000';
 
 export async function POST(request: Request) {
   try {
@@ -30,17 +30,15 @@ export async function POST(request: Request) {
       );
     }
 
-    // Create a new response
     const res = NextResponse.json(data);
     
-    // Set the auth cookie in the response
     if (data.token) {
       res.cookies.set({
         name: 'auth-token',
         value: data.token,
         httpOnly: true,
         path: '/',
-        maxAge: 60 * 60 * 24 * 30, // 30 days
+        maxAge: 60 * 60 * 24 * 30,
         sameSite: 'lax',
       });
     }
@@ -54,3 +52,4 @@ export async function POST(request: Request) {
     );
   }
 }
+
