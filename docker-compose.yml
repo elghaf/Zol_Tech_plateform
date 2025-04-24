@@ -19,35 +19,17 @@ services:
   backend:
     build:
       context: .
-      dockerfile: docker/backend/Dockerfile
-    ports:
-      - "8000:80"  # Keep this as is since it's your main API endpoint
+      dockerfile: docker/backend/Dockerfile.dev  # Switch to Dockerfile.prod for production
     volumes:
       - ./server:/var/www/html
-      - /var/www/html/vendor
-      - /var/www/html/storage
+    ports:
+      - "8000:8000"  # Using PHP's built-in server for dev
     environment:
       - APP_ENV=local
       - APP_DEBUG=true
-      - DB_CONNECTION=pgsql
-      - DB_HOST=db
-      - DB_PORT=5432
-      - DB_DATABASE=learning_platform
-      - DB_USERNAME=postgres
-      - DB_PASSWORD=secret
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
     depends_on:
       db:
         condition: service_healthy
-      redis:
-        condition: service_healthy
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "php", "artisan", "--version"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
   db:
     image: postgres:15
