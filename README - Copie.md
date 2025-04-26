@@ -1,1 +1,0 @@
-# Zol_Tech_plateform
