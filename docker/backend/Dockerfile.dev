@@ -1,0 +1,30 @@
+FROM php:8.2-fpm 
+
+# Install minimal required dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    libpq-dev \
+    libzip-dev \
+    unzip \
+    && docker-php-ext-install \
+    pdo \
+    pdo_pgsql \
+    zip
+
+# Install Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+WORKDIR /var/www/html
+
+# Copy startup script
+COPY docker/backend/start.sh /usr/local/bin/start.sh
+RUN chmod +x /usr/local/bin/start.sh
+
+# Ensure directory exists and set permissions
+RUN mkdir -p /var/www/html && chown www-data:www-data /var/www/html
+
+EXPOSE 8000
+
+# Use the startup script
+CMD ["/usr/local/bin/start.sh"]
